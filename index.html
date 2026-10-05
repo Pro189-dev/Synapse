@@ -3,48 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <title>Synapse - 10 Levels</title>
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Silkscreen&display=swap');
-    
-    body { 
-        margin: 0; 
-        overflow: hidden; 
-        background: #222; 
-        font-family: 'Silkscreen', sans-serif; 
-    }
-    canvas { 
-        display: block; 
-    }
-</style>
+
+
+
+
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: #222; 
+            font-family: 'Silkscreen', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        canvas { 
+            display: block; 
+            touch-action: none;
+        }
+    </style>
+
+
+
+
 </head>
-
-
-
-
-
-
-
 <body>
     <canvas id="gameCanvas"></canvas>
+
+
+
+
     <script>
-
-
-
-
-
-
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         
-
-
-
-
-
-       
         let audioCtx;
         function playTone(frequency, duration, type = 'square') {
             if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
             oscillator.type = type;
@@ -56,6 +52,11 @@
             oscillator.stop(audioCtx.currentTime + duration);
         }
 
+
+
+
+
+
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -63,13 +64,6 @@
         }
         window.addEventListener('resize', resize);
 
-
-
-
-
-
-
-       
         const levelTargets = [500, 450, 400, 350, 310, 270, 240, 210, 190, 180];
         let currentLevel = 1;
         let maxLevels = 10;
@@ -80,7 +74,6 @@
         let reactionTime = 0;
 
         function draw() {
-           
             if (state === 'start' || state === 'passed' || state === 'win') {
                 ctx.fillStyle = '#2b87d1'; 
             } else if (state === 'waiting') {
@@ -104,28 +97,21 @@
 
 
 
-
-
-
-
-
-           
             if (state === 'waiting' || state === 'ready') {
                 ctx.font = `20px ${fontName}`;
                 ctx.textAlign = 'left';
                 ctx.fillText(`Level: ${currentLevel}/${maxLevels}`, 20, 30);
                 ctx.textAlign = 'right';
                 ctx.fillText(`Target: ${levelTargets[currentLevel-1]}ms`, canvas.width - 20, 30);
-                ctx.textAlign = 'center';
+                ctx.textAlign = 'center'; 
             }
 
-           
             if (state === 'start') {
                 ctx.font = `40px ${fontName}`;
-                ctx.fillText('Synapse', centerX, centerY - 40);
+                ctx.fillText('SYNAPSE', centerX, centerY - 40);
                 ctx.font = `20px ${fontName}`;
                 ctx.fillText('10 Levels. Get faster every round.', centerX, centerY);
-                ctx.fillText('Click to start Level 1', centerX, centerY + 50);
+                ctx.fillText('Click or press Space to start Level 1', centerX, centerY + 50);
             } 
             else if (state === 'waiting') {
                 ctx.font = `30px ${fontName}`;
@@ -173,7 +159,11 @@
 
 
 
-        function handleClick() {
+
+        function handleClick(e) {
+     
+            if (e && e.button !== undefined && e.button !== 0) return;
+
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
             if (state === 'start' || state === 'passed') {
@@ -207,7 +197,8 @@
                 if (reactionTime <= target) {
                     if (currentLevel === maxLevels) {
                         state = 'win';
-                        playTone(1200, 0.4);
+                        playTone(1200, 0.4); 
+                    } else {
                         currentLevel++;
                         state = 'passed';
                         playTone(600, 0.2); 
@@ -227,20 +218,24 @@
 
 
 
-        window.addEventListener('mousedown', handleClick);
-        window.addEventListener('touchstart', (e) => {
-            e.preventDefault(); 
-            handleClick();
-        }, { passive: false });
+        window.addEventListener('pointerdown', handleClick);
 
-    
-        document.fonts.load('10px "Silkscreen"').then(() => {
-        resize();
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                e.preventDefault(); 
+                handleClick();
+            }
         });
-        
 
-
-
+        document.fonts.load('10px "Silkscreen"').then(() => {
+            resize();
+        }).catch(() => {
+            resize();
+        });
     </script>
+
+
+
+
 </body>
 </html>
